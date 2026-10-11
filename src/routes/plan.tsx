@@ -43,7 +43,7 @@ const DEMO: Omit<WeatherData, "city"> = {
 function PlanPage() {
   const getWeather = useServerFn(fetchWeather);
   const [form, setForm] = useState({ city: "", work: "", hours: "8", shade: "", water: "", lang: "en", symptoms: "" });
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<Partial<Record<"city" | "work" | "hours" | "shade" | "water" | "symptoms", string>>>({});
   const [agents, setAgents] = useState<AgentState[]>(idle());
   const [weatherErr, setWeatherErr] = useState<string | null>(null);
   const [result, setResult] = useState<{ w: WeatherData; a: Assessment; plan: Action[]; checks: Check[]; input: WorkerInput } | null>(null);
@@ -72,7 +72,7 @@ function PlanPage() {
     if (!r.success) {
       const errs: Record<string, string> = {};
       r.error.issues.forEach((i) => (errs[String(i.path[0])] ||= i.message));
-      setErrors(errs);
+      setErrors(errs as typeof errors);
       return;
     }
     setErrors({});
@@ -139,7 +139,7 @@ function PlanPage() {
             </div>
             <Field label="Preferred language">
               <div className="flex gap-3">
-                {[["en", "English"], ["hi", "हिन्दी"]].map(([v, l]) => (
+                {([["en", "English"], ["hi", "हिन्दी"]] as const).map(([v, l]) => (
                   <Choice key={v} active={form.lang === v} onClick={() => set("lang", v)}>{l}</Choice>
                 ))}
               </div>
@@ -159,7 +159,7 @@ function PlanPage() {
           <aside className="h-fit rounded-2xl border bg-card p-6">
             <h2 className="text-xl font-bold">Agent activity</h2>
             <ol className="mt-4 space-y-4">
-              {AGENTS.map((name, i) => <AgentRow key={name} name={name} s={agents[i]} />)}
+              {AGENTS.map((name, i) => <AgentRow key={name} name={name} s={agents[i] ?? { status: "idle" }} />)}
             </ol>
             <p className="mt-4 text-xs text-muted-foreground">Agents 2–4 are transparent rule-based steps today; ready to be upgraded to a server-side Gemini model.</p>
           </aside>
@@ -267,7 +267,7 @@ function Results({ r }: { r: { w: WeatherData; a: Assessment; plan: Action[]; ch
   );
 }
 
-function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
+function Field({ label, error, children }: { label: string; error?: string | undefined; children: React.ReactNode }) {
   return (
     <div>
       <label className="mb-2 block font-semibold">{label}</label>
@@ -284,7 +284,7 @@ function Choice({ active, onClick, children }: { active: boolean; onClick: () =>
   );
 }
 
-function YesNo({ label, value, onChange, error }: { label: string; value: string; onChange: (v: string) => void; error?: string }) {
+function YesNo({ label, value, onChange, error }: { label: string; value: string; onChange: (v: string) => void; error?: string | undefined }) {
   return (
     <Field label={label} error={error}>
       <div className="flex gap-3">
