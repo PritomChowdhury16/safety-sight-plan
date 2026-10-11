@@ -84,10 +84,11 @@ function PlanPage() {
     setBusy(true);
     try {
       const res = await getWeather({ data: { city: d.city } });
-      if (!res.ok) {
-        upd(0, { status: "failed", output: res.error });
+      if (!res.ok || !res.weather) {
+        const errMsg = res.error ?? "Unknown weather error";
+        upd(0, { status: "failed", output: errMsg });
         [1, 2, 3].forEach((i) => upd(i, { status: "skipped", output: "Not run — no weather data." }));
-        setWeatherErr(res.error);
+        setWeatherErr(errMsg);
         return;
       }
       upd(0, { status: "done", output: `${res.weather.city}: ${res.weather.temperature}°C, feels like ${res.weather.apparent}°C (Open-Meteo).` });

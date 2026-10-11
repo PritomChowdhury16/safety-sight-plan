@@ -5,7 +5,7 @@ import type { WeatherData } from "./heat";
 // Server-side Open-Meteo integration (no API key required). Future Gemini calls belong here too.
 export const fetchWeather = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ city: z.string().trim().min(2).max(80) }).parse(d))
-  .handler(async ({ data }): Promise<{ ok: true; weather: WeatherData } | { ok: false; error: string }> => {
+  .handler(async ({ data }): Promise<{ ok: boolean; weather?: WeatherData; error?: string }> => {
     try {
       const g = await fetch(
         `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(data.city)}&count=1&countryCode=IN&language=en&format=json`,
